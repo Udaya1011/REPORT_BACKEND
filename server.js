@@ -113,7 +113,8 @@ app.delete('/api/reports/:id', async (req, res) => {
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../REPORT/dist')));
-  app.get('*', (req, res) => {
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
     res.sendFile(path.resolve(__dirname, '../REPORT/dist', 'index.html'));
   });
 }
