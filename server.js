@@ -50,6 +50,25 @@ reportSchema.set('toJSON', {
 
 const Report = mongoose.model('Report', reportSchema);
 
+const dcSchema = new mongoose.Schema({
+  name: String,
+  count: Number,
+  date: String,
+  reportIds: [String],
+  createdAt: { type: Date, default: Date.now }
+});
+
+dcSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+  }
+});
+
+const DC = mongoose.model('DC', dcSchema);
+
 app.get('/api/reports', async (req, res) => {
   try {
     const reports = await Report.find().sort({ createdAt: -1 });
@@ -106,6 +125,35 @@ app.delete('/api/reports/:id', async (req, res) => {
     res.json({ message: 'Report deleted' });
   } catch (err) {
     console.error('Delete error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DC API routes
+app.get('/api/dcs', async (req, res) => {
+  try {
+    const dcs = await DC.find().sort({ createdAt: -1 });
+    res.json(dcs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/dcs', async (req, res) => {
+  try {
+    const newDC = new DC(req.body);
+    const savedDC = await newDC.save();
+    res.status(201).json(savedDC);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete('/api/dcs/:id', async (req, res) => {
+  try {
+    await DC.findByIdAndDelete(req.params.id);
+    res.json({ message: 'DC deleted' });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
